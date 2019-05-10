@@ -1,0 +1,58 @@
+version: "3"
+
+services:
+  dev:
+    image: wordpress
+    volumes:
+      - ./src:/var/www/html/wp-content/plugins/one-click-deployer
+      - ./theme:/var/www/html/wp-content/themes/one-click-deployer-demo
+    ports:
+      - "8080:80"
+    environment:
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_USER=root
+      - WORDPRESS_DB_PASSWORD=rootpass
+      - WORDPRESS_DB_NAME=dev
+      - WORDPRESS_DEBUG=1
+    links:
+      - ftp
+      - db
+      
+  prod:
+    image: wordpress
+    volumes:
+      - data-volume:/var/www/html/
+    environment:
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_USER=root
+      - WORDPRESS_DB_PASSWORD=rootpass
+      - WORDPRESS_DB_NAME=prod
+      - WORDPRESS_DEBUG=1
+    links:
+      - db
+    ports:
+      - "8081:80"
+      
+  ftp:
+    image: stilliard/pure-ftpd
+    volumes:
+      - data-volume:/home/ftpuser
+    environment:
+      - FTP_USER_NAME=ftpuser
+      - FTP_USER_PASS=ftppass
+      - FTP_USER_HOME=/home/ftpuser
+      - FTP_USER_GID=33
+      - FTP_USER_UID=33
+    ports:
+      - "8021:21"
+      - "30000-30009:30000-30009"
+      
+  db:
+    image: mariadb
+    volumes:
+      - ./initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+    
+volumes:
+  data-volume:
