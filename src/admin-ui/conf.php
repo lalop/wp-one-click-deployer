@@ -12,6 +12,8 @@ $plugins = get_plugins();
 	<form name="one-click-deployer" method="post" action="">
 		
 		<h2><?= __('Configure deploy theme', 'one-click-deployer') ?></h2>
+		
+    <?php wp_nonce_field('ocd-ftpsetup') ?>
 
     <table class="form-table">
       <tbody>
@@ -36,7 +38,7 @@ $plugins = get_plugins();
 		        <label for="one-click-deployer-conf-ftppassword"><?= __('Password ftp', 'one-click-deployer') ?></label>
           </th>
           <td>
-			      <input type="text" name="one-click-deployer-conf-ftppassword" id="one-click-deployer-conf-ftppassword"/>
+			      <input type="password" name="one-click-deployer-conf-ftppassword" id="one-click-deployer-conf-ftppassword"/>
           </td>
         </tr>
         <tr>

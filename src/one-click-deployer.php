@@ -26,7 +26,7 @@ function one_click_deployer_toolbar() {
 	global $wp_admin_bar;
 	$args = array(
 		'id' => 'one-click-deployer',
-    'title' => '<i class="dashicons-before dashicons-cloud"></i>'.__('Deploy', 'one-click-deployer'), 
+    'title' => '<i class="ab-icon dashicons-update"></i>'.__('Deploy', 'one-click-deployer'), 
     'group' => false,
     'href'   => admin_url('/tools.php?page=one-click-deployer'),
 	);
@@ -38,18 +38,19 @@ function one_click_deployer_page() {
     include_once $file;
   }, glob(dirname(__FILE__) . '/includes/*'));
 
-  if(isset($_POST['one-click-deployer-submit-conf'])) {
+  if(isset($_POST['one-click-deployer-submit-conf']) && check_admin_referer( 'ocd-ftpsetup')) {
+    $ftpSetup = [
+      'hostname' => $_POST['one-click-deployer-conf-ftphostname'],
+      'username' => $_POST['one-click-deployer-conf-ftpusername'],
+      'password' => $_POST['one-click-deployer-conf-ftppassword'],
+      'basepath' => $_POST['one-click-deployer-conf-ftpbasepath']
+    ];
     file_put_contents(ABSPATH .'/one-click-deployer.json', json_encode([
-      'ftp' => [
-        'hostname' => $_POST['one-click-deployer-conf-ftphostname'],
-        'username' => $_POST['one-click-deployer-conf-ftpusername'],
-        'password' => $_POST['one-click-deployer-conf-ftppassword'],
-        'basepath' => $_POST['one-click-deployer-conf-ftpbasepath']
-      ]
+      'ftp' => $ftpSetup
     ], JSON_PRETTY_PRINT));
   }
 
-  if(isset($_POST['submit'])) {
+  if(isset($_POST['submit']) && check_admin_referer( 'ocd-deploy')) {
     if(isset($_POST['deploy-current-theme'])) {
       echo '<div class="wrap">';
       one_click_deployer_send_current_theme();
