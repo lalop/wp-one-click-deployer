@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: One click deployerer
+ * Plugin Name: One click deployer
  * Description: A wordpress deployer tool
  * Version: 0.0.1
  * Author: Samuel Laulhau
