@@ -38,28 +38,15 @@ function one_click_deployer_page() {
     include_once $file;
   }, glob(dirname(__FILE__) . '/includes/*'));
 
-  if(isset($_POST['one-click-deployer-submit-conf']) && check_admin_referer( 'ocd-ftpsetup')) {
-    $ftpSetup = [
-      'hostname' => $_POST['one-click-deployer-conf-ftphostname'],
-      'username' => $_POST['one-click-deployer-conf-ftpusername'],
-      'password' => $_POST['one-click-deployer-conf-ftppassword'],
-      'basepath' => $_POST['one-click-deployer-conf-ftpbasepath']
-    ];
-    file_put_contents(ABSPATH .'/one-click-deployer.json', json_encode([
-      'ftp' => $ftpSetup
-    ], JSON_PRETTY_PRINT));
+  if(isset($_POST['one-click-deployer-submit-conf']) && check_admin_referer('__ocd_nonce', 'ocd-ftpsetup')) {
+    one_click_deployer_save_credentials($_POST);
   }
 
-  if(isset($_POST['submit']) && check_admin_referer( 'ocd-deploy')) {
+  if(isset($_POST['submit']) && check_admin_referer('__ocd_nonce', 'ocd-deploy')) {
     if(isset($_POST['deploy-current-theme'])) {
       echo '<div class="wrap">';
       one_click_deployer_send_current_theme();
       echo '</div>';
-    }
-    if(isset($_POST['deploy-plugins']) && is_array($_POST['deploy-plugins'])) {
-      foreach($_POST['deploy-plugins'] as $plugin) {
-        one_click_deployer_send_plugin($plugin);
-      }
     }
   } elseif(one_click_deployer_get_config() === null) {
     include_once dirname(__FILE__) . '/admin-ui/conf.php';
@@ -69,24 +56,35 @@ function one_click_deployer_page() {
 }
 
 function one_click_deployer_get_config() {
-  if(file_exists(ABSPATH .'/one-click-deployer.json')) {
-    $conf = json_decode(file_get_contents(ABSPATH .'/one-click-deployer.json'), true) ?: null;
-  } else {
-    $conf = null;
-  }
-  return $conf;
+  return get_option('ocd_ftp', null);
 }
 
 function one_click_deployer_send_current_theme() {
   $remote = new OneClickDeployerRemoteServer(one_click_deployer_get_config());
   $remote->syncFiles('wp-content/themes/'.get_stylesheet());
-  echo __('theme sent', 'one-click-deployer');
+  esc_html_e('theme sent', 'one-click-deployer');
 }
 
-function one_click_deployer_send_plugin($plugin) {
-  $plugin = trim(current(explode('/', $plugin)), '.');
-  if(!$plugin) return;
-  $remote = new OneClickDeployerRemoteServer(one_click_deployer_get_config());
-  $remote->syncFiles("wp-content/plugins/{$plugin}");
-  printf(__('plugin %s sent', 'one-click-deployer'), $plugin);
+function one_click_deployer_save_credentials($postData) {
+
+  $submittedSetup = [
+    'hostname' => $postData['one-click-deployer-conf-ftphostname'],
+    'username' => $postData['one-click-deployer-conf-ftpusername'],
+    'password' => $postData['one-click-deployer-conf-ftppassword'],
+    'basepath' => $postData['one-click-deployer-conf-ftpbasepath']
+  ];
+
+  /** checks widely inspired from https://codex.wordpress.org/Function_Reference/request_filesystem_credentials */
+  $submittedSetup = wp_unslash($submittedSetup);
+  // Sanitize the hostname, Some people might pass in odd-data:
+  $submittedSetup['hostname'] = preg_replace( '|\w+://|', '', $submittedSetup['hostname'] ); //Strip any schemes off
+  
+  if (strpos($submittedSetup['hostname'], ':')) {
+		list($submittedSetup['hostname'], $submittedSetup['port']) = explode( ':', $submittedSetup['hostname'], 2);
+		if (!is_numeric($submittedSetup['port'])) {
+			unset($submittedSetup['port']);
+		}
+  }
+  
+  update_option('ocd_ftp', $submittedSetup);
 }

@@ -9,10 +9,10 @@ class OneClickDeployerRemoteServer {
   public function syncFiles($path) {
 
     $fileTransfert = new OneClickDeployerFileTransfert(
-      $this->opts['ftp']['hostname'],
-      $this->opts['ftp']['username'],
-      $this->opts['ftp']['password'],
-      $this->opts['ftp']['basepath']
+      $this->opts['hostname'],
+      $this->opts['username'],
+      $this->opts['password'],
+      $this->opts['basepath']
     );
     $fileTransfert->send(trailingslashit($path));
   }

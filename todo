@@ -1,0 +1,27 @@
+
+
+TODO:
+- ajouter un champ pour des scripts à éxécuter avant (build assets ...)
+- deploy direct depuis la toolbar
+- gérer les data (uploads et sql)
+- check validité du système local et remote (check ftp_chmod)
+- support sftp
+- configuration du serveur
+- output avancement
+- export config (menu ...)
+- ...
+ 
+ 
+
+migration des métas et options si préfixe différent 
+insert into vh_usermeta
+(user_id, meta_key, meta_value)
+SELECT user_id, REPLACE(meta_key, 'wp_', 'vh_') as meta_key, meta_value
+FROM `vh_usermeta`
+WHERE `meta_key` LIKE 'wp\_%'
+
+insert into vh_options
+(option_name, option_value, autoload)
+SELECT REPLACE(option_name, 'wp_', 'vh_') as option_name, option_value, autoload
+FROM `vh_options`
+WHERE `option_name` LIKE 'wp\_%'
